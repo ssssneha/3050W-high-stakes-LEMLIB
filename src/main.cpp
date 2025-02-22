@@ -28,15 +28,26 @@ pros::Rotation horizontalEnc(18);
 pros::Rotation verticalEnc(-11);
 // horizontal tracking wheel. 2.75" diameter, 5.75" offset, back of the robot (negative)
 lemlib::TrackingWheel horizontal(&horizontalEnc, lemlib::Omniwheel::NEW_325, -3.25);
+<<<<<<< HEAD
+=======
+// vertical tracking wheel encoder. Rotation sensor, port 11, reversed
+pros::Rotation verticalEnc(-11);
+>>>>>>> c02db3c6b87c1fd68089a553441a93314d21f208
 // vertical tracking wheel. 2.75" diameter, 2.5" offset, left of the robot (negative)
 lemlib::TrackingWheel vertical(&verticalEnc, lemlib::Omniwheel::NEW_325, -5.5);
 
 // drivetrain settings
 lemlib::Drivetrain drivetrain(&leftMotors, // left motor group
                               &rightMotors, // right motor group
+<<<<<<< HEAD
                               12, // 10 inch track width
                               lemlib::Omniwheel::NEW_325, // using new 4" omnis
                               480, // drivetrain rpm is 360
+=======
+                              10.5, // 10 inch track width
+                              lemlib::Omniwheel::NEW_325, // using new 4" omnis
+                              360, // drivetrain rpm is 360
+>>>>>>> c02db3c6b87c1fd68089a553441a93314d21f208
                               2 // horizontal drift is 2. If we had traction wheels, it would have been 8
 );
 
