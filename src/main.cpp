@@ -5,49 +5,39 @@
 pros::Controller controller(pros::E_CONTROLLER_MASTER);
 
 // motor groups
-pros::MotorGroup leftMotors({-7, 4, -3},
+pros::MotorGroup leftMotors({-9, 8, -10},
                             pros::MotorGearset::blue); // left motor group - ports 3 (reversed), 4, 5 (reversed)
-pros::MotorGroup rightMotors({13, -14, 9}, pros::MotorGearset::blue); // right motor group - ports 6, 7, 9 (reversed)
+pros::MotorGroup rightMotors({15, -16, 19}, 
+                            pros::MotorGearset::blue); // right motor group - ports 6, 7, 9 (reversed)
 
-pros::Motor intake(-15, pros::MotorGearset::blue);
+pros::Motor intake(-11, pros::MotorGearset::blue);
 
-pros::Motor lift1(5, pros::MotorGearset::blue);
-pros::Motor lift2(-21, pros::MotorGearset::blue);
+pros::Motor lift1(12, pros::MotorGearset::blue);
+pros::Motor lift2(2, pros::MotorGearset::blue);
 
 // Inertial Sensor on port 10
-pros::Imu imu(11);
+pros::Imu imu(5);
 
-pros::ADIDigitalOut clamp('H');
-pros::ADIDigitalOut leftD('A');
+pros::ADIDigitalOut clamp('A');
+pros::ADIDigitalOut leftD('H');
 pros::ADIDigitalOut rightD('B');
 
 // tracking wheels
 // horizontal tracking wheel encoder. Rotation sensor, port 20, not reversed
-pros::Rotation horizontalEnc(18);
+//pros::Rotation horizontalEnc(18);
 // vertical tracking wheel encoder
-pros::Rotation verticalEnc(-11);
+//pros::Rotation verticalEnc(-11);
 // horizontal tracking wheel. 2.75" diameter, 5.75" offset, back of the robot (negative)
-lemlib::TrackingWheel horizontal(&horizontalEnc, lemlib::Omniwheel::NEW_325, -3.25);
-<<<<<<< HEAD
-=======
-// vertical tracking wheel encoder. Rotation sensor, port 11, reversed
-pros::Rotation verticalEnc(-11);
->>>>>>> c02db3c6b87c1fd68089a553441a93314d21f208
+//lemlib::TrackingWheel horizontal(&horizontalEnc, lemlib::Omniwheel::NEW_325, -3.25);
 // vertical tracking wheel. 2.75" diameter, 2.5" offset, left of the robot (negative)
-lemlib::TrackingWheel vertical(&verticalEnc, lemlib::Omniwheel::NEW_325, -5.5);
+//lemlib::TrackingWheel vertical(&verticalEnc, lemlib::Omniwheel::NEW_325, -5.5);
 
 // drivetrain settings
 lemlib::Drivetrain drivetrain(&leftMotors, // left motor group
                               &rightMotors, // right motor group
-<<<<<<< HEAD
-                              12, // 10 inch track width
+                              11.5, // 12 inch track width
                               lemlib::Omniwheel::NEW_325, // using new 4" omnis
-                              480, // drivetrain rpm is 360
-=======
-                              10.5, // 10 inch track width
-                              lemlib::Omniwheel::NEW_325, // using new 4" omnis
-                              360, // drivetrain rpm is 360
->>>>>>> c02db3c6b87c1fd68089a553441a93314d21f208
+                              450, // drivetrain rpm is 360
                               2 // horizontal drift is 2. If we had traction wheels, it would have been 8
 );
 
@@ -64,9 +54,9 @@ lemlib::ControllerSettings linearController(10, // proportional gain (kP)
 );
 
 // angular motion controller
-lemlib::ControllerSettings angularController(2, // proportional gain (kP)
+lemlib::ControllerSettings angularController(4, // proportional gain (kP)
                                              0, // integral gain (kI)
-                                             20, // derivative gain (kD)
+                                             26, // derivative gain (kD)
                                              3, // anti windup
                                              1, // small error range, in degrees
                                              100, // small error range timeout, in milliseconds
@@ -84,14 +74,14 @@ lemlib::OdomSensors sensors(nullptr, // vertical tracking wheel
 );
 
 // input curve for throttle input during driver control
-lemlib::ExpoDriveCurve throttleCurve(3, // joystick deadband out of 127
-                                     10, // minimum output where drivetrain will move out of 127
+lemlib::ExpoDriveCurve throttleCurve(0, // joystick deadband out of 127
+                                     5, // minimum output where drivetrain will move out of 127
                                      1.02 // expo curve gain
 );
 
 // input curve for steer input during driver control
-lemlib::ExpoDriveCurve steerCurve(3, // joystick deadband out of 127
-                                  10, // minimum output where drivetrain will move out of 127
+lemlib::ExpoDriveCurve steerCurve(0, // joystick deadband out of 127
+                                  5, // minimum output where drivetrain will move out of 127
                                   1.02 // expo curve gain
 );
 
@@ -106,6 +96,7 @@ bool rightState = false;
 void toggleClamp() {
     clampState = !clampState;  // Toggle state
     clamp.set_value(clampState);
+    pros::delay(10);
 }
 
 void toggleLeft() {
@@ -135,6 +126,8 @@ void initialize() {
     pros::lcd::initialize(); // initialize brain screen
     chassis.calibrate(); // calibrate sensors
 
+    chassis.setPose(0, 0, 0);
+
     // the default rate is 50. however, if you need to change the rate, you
     // can do the following.
     // lemlib::bufferedStdout().setRate(...);
@@ -152,6 +145,7 @@ void initialize() {
             pros::lcd::print(2, "Theta: %f", chassis.getPose().theta); // heading
             // log position telemetry
             lemlib::telemetrySink()->info("Chassis pose: {}", chassis.getPose());
+
             // delay to save resources
             pros::delay(50);
         }
@@ -168,9 +162,26 @@ void disabled() {}
  */
 void competition_initialize() {}
 
+/*
+
+ █████╗     ██╗   ██╗    ████████╗     ██████╗     ███╗   ██╗
+██╔══██╗    ██║   ██║    ╚══██╔══╝    ██╔═══██╗    ████╗  ██║
+███████║    ██║   ██║       ██║       ██║   ██║    ██╔██╗ ██║
+██╔══██║    ██║   ██║       ██║       ██║   ██║    ██║╚██╗██║
+██║  ██║    ╚██████╔╝       ██║       ╚██████╔╝    ██║ ╚████║
+╚═╝  ╚═╝     ╚═════╝        ╚═╝        ╚═════╝     ╚═╝  ╚═══╝                                                           
+
+*/
+
 // get a path used for pure pursuit
 // this needs to be put outside a function
 ASSET(example_txt); // '.' replaced with "_" to make c++ happy
+
+
+/**
+ * Selects Autonomous Mode based on the Limit Switch Input
+ */
+
 
 /**
  * Runs during auto
@@ -178,21 +189,57 @@ ASSET(example_txt); // '.' replaced with "_" to make c++ happy
  * This is an example autonomous routine which demonstrates a lot of the features LemLib has to offer
  */
 void autonomous() {
-    chassis.setPose({0, 0, 0});
-    chassis.moveToPoint(24,24,5000);
-    chassis.moveToPoint(-24,48,5000);
-
-
-
- 
     
+    //chassis.moveToPoint(24,24,5000);
+
+    // turn to face heading 90 with a very long timeout (PID TUNER)
+    //chassis.turnToHeading(90, 100000);
+    
+    
+    belt(100);
+    intake.move(-100);
+    pros::delay(500);
+    
+    chassis.moveToPoint(0,13.5,5000);
+    chassis.turnToPoint(-26,13.5,5000,{.forwards = false},true);
+    chassis.moveToPoint(-26,13.5,5000,{.forwards = false},true);
+    pros::delay(1000);
+    toggleClamp();
+    pros::delay(1000);
+
+    chassis.moveToPoint(-26,45,5000);
+    chassis.moveToPoint(-26,30,5000,{.forwards = false},true);
+    //chassis.turnToPoint(-53,60,5000);  
+    chassis.moveToPoint(-53,60,1000);
+    chassis.turnToHeading(270,5000);
+    chassis.moveToPoint(-60,60,5000);
+    chassis.moveToPoint(-55,60,5000);
+    chassis.moveToPoint(-55,58,5000);
+    //chassis.moveToPoint(-48,48,5000);
+    chassis.turnToHeading(180,5000);
+    chassis.moveToPoint(-55,10,5000);
+    chassis.moveToPoint(-55,-5,100);
+    chassis.moveToPoint(-55,10,5000,{.forwards = false},true);
+    chassis.turnToHeading(270,5000);
+    chassis.moveToPoint(-61,10,5000);
+    //chassis.moveToPoint(-72,-100,5000,{.forwards = false}, true);
+    
+
     // wait until the movement is done
     chassis.waitUntilDone();
     pros::lcd::print(4, "pure pursuit finished!");
 }
 
 /**
- * Runs in driver control
+ 
+██████╗     ██████╗     ██╗    ██╗   ██╗    ███████╗    ██████╗ 
+██╔══██╗    ██╔══██╗    ██║    ██║   ██║    ██╔════╝    ██╔══██╗
+██║  ██║    ██████╔╝    ██║    ██║   ██║    █████╗      ██████╔╝
+██║  ██║    ██╔══██╗    ██║    ╚██╗ ██╔╝    ██╔══╝      ██╔══██╗
+██████╔╝    ██║  ██║    ██║     ╚████╔╝     ███████╗    ██║  ██║
+╚═════╝     ╚═╝  ╚═╝    ╚═╝      ╚═══╝      ╚══════╝    ╚═╝  ╚═╝
+                                                                
+                                            
  */
 void opcontrol() {
     // controller
@@ -200,21 +247,20 @@ void opcontrol() {
     while (true) {
         // get joystick positions
         int leftY = controller.get_analog(pros::E_CONTROLLER_ANALOG_LEFT_Y);
-        int rightX = controller.get_analog(pros::E_CONTROLLER_ANALOG_RIGHT_X);
+        int rightY = controller.get_analog(pros::E_CONTROLLER_ANALOG_RIGHT_Y);
 
         // move the chassis with curvature drive
-        chassis.tank(leftY, rightX);
+        chassis.tank(leftY, rightY);
 
-         // If Button A is pressed, move the motor forward
-        if (controller.get_digital(pros::E_CONTROLLER_DIGITAL_Y)) {
+        if (controller.get_digital_new_press(pros::E_CONTROLLER_DIGITAL_Y)) {
             toggleClamp();
         }
 
-        if(controller.get_digital(pros::E_CONTROLLER_DIGITAL_DOWN)) {
+        if(controller.get_digital_new_press(pros::E_CONTROLLER_DIGITAL_DOWN)) {
             toggleLeft();
         }
 
-        if(controller.get_digital(pros::E_CONTROLLER_DIGITAL_B)) {
+        if(controller.get_digital_new_press(pros::E_CONTROLLER_DIGITAL_B)) {
             toggleRight();
         }
 
@@ -228,6 +274,7 @@ void opcontrol() {
         }
         else{
             intake.set_brake_mode(pros::E_MOTOR_BRAKE_COAST);
+            intake.brake();
             belt(0);
         }
 
