@@ -200,9 +200,9 @@ void autonomous() {
     intake.move(-100);
     pros::delay(500);
     
-    chassis.moveToPoint(0,13.5,5000);
-    chassis.turnToPoint(-26,13.5,5000,{.forwards = false},true);
-    chassis.moveToPoint(-26,13.5,5000,{.forwards = false},true);
+    chassis.moveToPoint(0,14,5000);
+    chassis.turnToPoint(-27,14,5000,{.forwards = false},true);
+    chassis.moveToPoint(-27,14,5000,{.forwards = false},true);
     pros::delay(1000);
     toggleClamp();
     pros::delay(1000);
@@ -217,12 +217,20 @@ void autonomous() {
     chassis.moveToPoint(-55,58,5000);
     //chassis.moveToPoint(-48,48,5000);
     chassis.turnToHeading(180,5000);
-    chassis.moveToPoint(-55,10,5000);
-    chassis.moveToPoint(-55,-5,100);
+    chassis.moveToPoint(-55,15,5000);
+    chassis.moveToPoint(-55,-10,100);
+    chassis.moveToPoint(-55,-20,100);
     chassis.moveToPoint(-55,10,5000,{.forwards = false},true);
     chassis.turnToHeading(270,5000);
-    chassis.moveToPoint(-61,10,5000);
-    //chassis.moveToPoint(-72,-100,5000,{.forwards = false}, true);
+    chassis.moveToPoint(-65,10,5000);
+
+    chassis.moveToPoint(-65,20,5000);
+    chassis.moveToPoint(-70,-10,5000,{.forwards = false}, true);
+    pros::delay(1000);
+    toggleClamp();
+    pros::delay(1000);
+    chassis.moveToPoint(-24,24,5000);
+
     
 
     // wait until the movement is done
