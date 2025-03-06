@@ -200,6 +200,7 @@ void autonomous() {
     intake.move(-100);
     pros::delay(500);
     
+    // first mogo
     chassis.moveToPoint(0,14,5000);
     chassis.turnToPoint(-27,14,5000,{.forwards = false},true);
     chassis.moveToPoint(-27,14,5000,{.forwards = false},true);
@@ -210,26 +211,61 @@ void autonomous() {
     chassis.moveToPoint(-26,45,5000);
     chassis.moveToPoint(-26,30,5000,{.forwards = false},true);
     //chassis.turnToPoint(-53,60,5000);  
+    
+    // wall stake
     chassis.moveToPoint(-53,60,1000);
     chassis.turnToHeading(270,5000);
-    chassis.moveToPoint(-60,60,5000);
-    chassis.moveToPoint(-55,60,5000);
+    chassis.moveToPoint(-65,60,5000);
+    pros::delay(1000);
+    chassis.moveToPoint(-55,60,5000,{.forwards = false},true);
     chassis.moveToPoint(-55,58,5000);
     //chassis.moveToPoint(-48,48,5000);
     chassis.turnToHeading(180,5000);
-    chassis.moveToPoint(-55,15,5000);
+    chassis.moveToPoint(-55,30,5000);
+    chassis.moveToPoint(-65,10,5000);
+    chassis.moveToPoint(-55,30,5000,{.forwards = false},true);
+    chassis.moveToPoint(-55,10,5000);
     chassis.moveToPoint(-55,-10,100);
-    chassis.moveToPoint(-55,-20,100);
+    chassis.moveToPoint(-55,-23,100);
     chassis.moveToPoint(-55,10,5000,{.forwards = false},true);
     chassis.turnToHeading(270,5000);
-    chassis.moveToPoint(-65,10,5000);
+    //chassis.moveToPoint(-65,10,5000);
 
     chassis.moveToPoint(-65,20,5000);
-    chassis.moveToPoint(-70,-10,5000,{.forwards = false}, true);
-    pros::delay(1000);
+    chassis.moveToPoint(-67.5,-15,1000,{.forwards = false}, true);
+    pros::delay(500);
+    toggleClamp();
+    intake.move(100);
+    pros::delay(500);
+    intake.move(-100);
+    //chassis.moveToPoint(-24,24,5000);
+    chassis.moveToPoint(-40,70,5000);
+    chassis.moveToPoint(-40,80,5000);
+    chassis.moveToPoint(-25,90,5000);
+    chassis.turnToHeading(180,5000);
+    chassis.moveToPoint(-25,110,5000,{.forwards = false}, true);
+    pros::delay(500);
     toggleClamp();
     pros::delay(1000);
-    chassis.moveToPoint(-24,24,5000);
+    chassis.moveToPoint(-70,115,1000,{.forwards = false}, true);
+    belt(0);
+    chassis.moveToPoint(-55,100,5000);
+    pros::delay(500);
+    belt(100);
+    pros::delay(250);
+    belt(0);
+    chassis.moveToPoint(0,120,5000,{.forwards = false}, true);
+    chassis.turnToHeading(180,5000);
+    chassis.moveToPoint(0,125,5000,{.forwards = false}, true);
+    belt(100);
+    pros::delay(1000);
+    chassis.moveToPoint(0,120,5000);
+    chassis.turnToHeading(0,5000);
+    chassis.moveToPoint(0,110,5000,{.forwards = false}, true);
+    toggleClamp();
+    chassis.moveToPoint(-27,90,5000);
+
+
 
     
 
