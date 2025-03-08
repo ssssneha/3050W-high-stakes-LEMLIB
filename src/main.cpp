@@ -125,7 +125,7 @@ void belt(double speed) {
 
 /*void detect() {
     while (true) {
-        printf("Proximity value: %ld \n", sorter.get_proximity());
+        printf("Proximity value: %ld \n", sorter.get_hue());
         pros::delay(20);
     }
 }
@@ -339,7 +339,7 @@ void opcontrol() {
         }
 
         if (sorter.get_proximity()) {
-            pros::lcd::print(6, "Proximity value: %ld \n", sorter.get_proximity());
+            pros::lcd::print(6, "Hue value: %ld \n", sorter.get_hue());
         }
 
         // delay to save resources
