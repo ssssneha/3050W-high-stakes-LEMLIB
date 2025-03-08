@@ -1,5 +1,10 @@
 #include "main.h"
 #include "lemlib/api.hpp" // IWYU pragma: keep
+#include "pros/adi.hpp"
+#include "pros/imu.hpp"
+#include "pros/llemu.hpp"
+#include "pros/optical.hpp"
+#include <cstdio>
 
 // controller
 pros::Controller controller(pros::E_CONTROLLER_MASTER);
@@ -18,9 +23,13 @@ pros::Motor lift2(2, pros::MotorGearset::blue);
 // Inertial Sensor on port 10
 pros::Imu imu(5);
 
+// Color Sensor on port #
+pros::Optical sorter(6);
+
 pros::ADIDigitalOut clamp('A');
 pros::ADIDigitalOut leftD('H');
 pros::ADIDigitalOut rightD('B');
+pros::ADIButton selector('G');
 
 // tracking wheels
 // horizontal tracking wheel encoder. Rotation sensor, port 20, not reversed
@@ -114,6 +123,13 @@ void belt(double speed) {
     lift2.move(speed);
 }
 
+/*void detect() {
+    while (true) {
+        printf("Proximity value: %ld \n", sorter.get_proximity());
+        pros::delay(20);
+    }
+}
+*/
 
 
 /**
@@ -320,6 +336,10 @@ void opcontrol() {
             intake.set_brake_mode(pros::E_MOTOR_BRAKE_COAST);
             intake.brake();
             belt(0);
+        }
+
+        if (sorter.get_proximity()) {
+            pros::lcd::print(6, "Proximity value: %ld \n", sorter.get_proximity());
         }
 
         // delay to save resources
