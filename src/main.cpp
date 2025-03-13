@@ -3,6 +3,7 @@
 #include "pros/adi.hpp"
 #include "pros/imu.hpp"
 #include "pros/llemu.hpp"
+#include "pros/misc.h"
 #include "pros/optical.hpp"
 #include <cstdio>
 
@@ -23,13 +24,16 @@ pros::Motor lift2(2, pros::MotorGearset::blue);
 // Inertial Sensor on port 10
 pros::Imu imu(5);
 
-// Color Sensor on port #
-pros::Optical sorter(6);
+// Optical Sensor on port #
+pros::Optical detector(6);
 
 pros::ADIDigitalOut clamp('A');
-pros::ADIDigitalOut leftD('H');
-pros::ADIDigitalOut rightD('B');
-pros::ADIButton selector('G');
+pros::ADIDigitalOut leftD('C');
+pros::ADIDigitalOut rightD('G');
+pros::ADIDigitalOut sillyString('B');
+pros::ADIButton selector('H');
+
+
 
 // tracking wheels
 // horizontal tracking wheel encoder. Rotation sensor, port 20, not reversed
@@ -63,9 +67,9 @@ lemlib::ControllerSettings linearController(10, // proportional gain (kP)
 );
 
 // angular motion controller
-lemlib::ControllerSettings angularController(4, // proportional gain (kP)
+lemlib::ControllerSettings angularController(3, // proportional gain (kP)
                                              0, // integral gain (kI)
-                                             26, // derivative gain (kD)
+                                             20, // derivative gain (kD)
                                              3, // anti windup
                                              1, // small error range, in degrees
                                              100, // small error range timeout, in milliseconds
@@ -73,6 +77,9 @@ lemlib::ControllerSettings angularController(4, // proportional gain (kP)
                                              500, // large error range timeout, in milliseconds
                                              0 // maximum acceleration (slew)
 );
+// 4 - 26
+// 3 - 20
+// 2 - 20
 
 // sensors for odometry
 lemlib::OdomSensors sensors(nullptr, // vertical tracking wheel
@@ -101,6 +108,7 @@ lemlib::Chassis chassis(drivetrain, linearController, angularController, sensors
 bool clampState = false;
 bool leftState = false;
 bool rightState = false;
+bool sillyState = false;
 
 void toggleClamp() {
     clampState = !clampState;  // Toggle state
@@ -118,18 +126,165 @@ void toggleRight() {
     rightD.set_value(rightState);
 }
 
+void toggleSilly() {
+    sillyState = !sillyState;
+    sillyString.set_value(sillyState);
+}
+
 void belt(double speed) {
     lift1.move(speed);
     lift2.move(speed);
 }
 
-/*void detect() {
-    while (true) {
-        printf("Proximity value: %ld \n", sorter.get_hue());
-        pros::delay(20);
+/*
+  ██████╗   ██████╗   ███████╗       █████╗   ██╗   ██╗  ████████╗   ██████╗   ███╗   ██╗
+  ██╔══██╗  ██╔══██╗  ██╔════╝      ██╔══██╗  ██║   ██║  ╚══██╔══╝  ██╔═══██╗  ████╗  ██║
+  ██████╔╝  ██████╔╝  █████╗        ███████║  ██║   ██║     ██║     ██║   ██║  ██╔██╗ ██║
+  ██╔═══╝   ██╔══██╗  ██╔══╝        ██╔══██║  ██║   ██║     ██║     ██║   ██║  ██║╚██╗██║
+  ██║       ██║  ██║  ███████╗      ██║  ██║  ╚██████╔╝     ██║     ╚██████╔╝  ██║ ╚████║
+  ╚═╝       ╚═╝  ╚═╝  ╚══════╝      ╚═╝  ╚═╝   ╚═════╝      ╚═╝      ╚═════╝   ╚═╝  ╚═══╝
+*/
+
+/**
+ * Selects Autonomous Mode based on the Limit Switch Input
+ */
+
+enum strat{
+    SKILLS,
+    PID,
+};
+
+double sideA = 1;
+int i = 0;
+strat Auton;
+
+void increment(){
+    i++;
+    if(i>3){
+      i=1;
     }
 }
-*/
+
+void pid_tune(double side){
+    //chassis.moveToPoint(24*side,24,5000);
+
+    // turn to face heading 90 with a very long timeout (PID TUNER)
+    chassis.turnToHeading(90, 100000);
+}
+
+void skills(){
+    belt(100);
+    intake.move(-90);
+    pros::delay(500);
+    
+    // first mogo
+    chassis.moveToPoint(0,15,5000);
+    //chassis.turnToPoint(-27,14.5,5000,{.forwards = false},true);
+    chassis.turnToHeading(90, 5000);
+    chassis.moveToPoint(-27,16,5000,{.forwards = false,.maxSpeed = 60},true);
+    pros::delay(1000);
+    toggleClamp();
+    pros::delay(1000);
+
+    belt(100);
+    chassis.moveToPoint(-26, 30, 5000);
+    chassis.moveToPoint(-26,45,5000);
+    pros::delay(1500);
+    belt(-100);
+    pros::delay(1000);
+    toggleSilly();
+    chassis.moveToPoint(-26,30,5000,{.forwards = false},true);
+    //chassis.turnToPoint(-53,60,5000);  
+    
+    // wall stake
+    belt(100);
+    chassis.moveToPoint(-53,59,1000);
+    chassis.turnToHeading(270,5000);
+    chassis.moveToPoint(-65,59,5000);
+    //chassis.moveToPoint(-55, 59, 5000,{.forwards = false},true);
+    chassis.moveToPoint(-70, 59, 5000);
+    pros::delay(1000);
+    toggleSilly();
+
+    chassis.moveToPoint(-55,59,5000,{.forwards = false},true);
+    chassis.moveToPoint(-55,58,5000);
+
+    // corner 1
+    chassis.turnToHeading(180,5000);
+    chassis.moveToPoint(-55,35,5000);
+    chassis.moveToPoint(-65,10,5000);
+    chassis.moveToPoint(-55,30,5000,{.forwards = false},true);
+    chassis.moveToPoint(-55,10,5000);
+    chassis.moveToPoint(-55,-10,100);
+    chassis.moveToPoint(-60,-28,100,{.forwards = false,.maxSpeed = 60});
+    chassis.moveToPoint(-55,10,5000,{.forwards = false},true);
+    chassis.turnToHeading(270,5000);
+    //chassis.moveToPoint(-65,10,5000);
+
+    chassis.moveToPoint(-70,20,5000);
+    chassis.moveToPoint(-80,-15,1000,{.forwards = false}, true);
+    pros::delay(500);
+    belt(-100);
+    toggleClamp();
+    intake.move(90);
+    pros::delay(500);
+    intake.move(-90);
+    belt(0);
+    //chassis.moveToPoint(-24,24,5000);
+
+    // move to corner 2
+    chassis.moveToPoint(-60,60,5000);
+    chassis.moveToPoint(-60,80,5000);
+    chassis.moveToPoint(-33,90,5000);
+    chassis.turnToHeading(180,5000);
+
+    /*chassis.moveToPoint(-47,60,5000);
+    chassis.moveToPoint(-47,80,5000);
+    chassis.moveToPoint(-25,90,5000);
+    chassis.turnToHeading(180,5000);
+    chassis.moveToPoint(-25,115,5000,{.forwards = false}, true);
+    pros::delay(500);
+    toggleClamp();
+    pros::delay(1000);
+    chassis.moveToPoint(-75,115,1000);
+    pros::delay(500);
+    toggleRight();
+    pros::delay(500);
+    chassis.moveToPoint(-85,115,1000,{.forwards = false},true);
+    belt(0);
+    //toggleClamp();
+    pros::delay(1000);
+    chassis.moveToPoint(-55,100,5000);
+    pros::delay(500);
+    belt(100);
+    pros::delay(500);
+    belt(0);
+    // alliance stake
+    chassis.moveToPoint(-40,125,5000,{.forwards = false}, true);
+    chassis.moveToPoint(-10,125,5000,{.forwards = false}, true);
+    chassis.turnToHeading(180,5000);
+    chassis.moveToPoint(-10,130,5000,{.forwards = false}, true);
+    belt(100);
+    pros::delay(4000);
+    chassis.moveToPoint(-10,120,5000);
+    chassis.turnToHeading(-50,5000);
+    chassis.moveToPoint(0,110,5000,{.forwards = false}, true);
+    toggleClamp();
+    chassis.moveToPoint(-30,80,5000);
+    */
+}
+
+
+void selectAuton(enum strat Auton, double side) {
+    switch (Auton){
+        case SKILLS:
+            skills();
+            break;
+        case PID:
+            pid_tune(side);
+            break;
+    }
+}
 
 
 /**
@@ -143,6 +298,14 @@ void initialize() {
     chassis.calibrate(); // calibrate sensors
 
     chassis.setPose(0, 0, 0);
+
+    detector.set_led_pwm(255);
+
+    
+
+
+    
+
 
     // the default rate is 50. however, if you need to change the rate, you
     // can do the following.
@@ -161,6 +324,22 @@ void initialize() {
             pros::lcd::print(2, "Theta: %f", chassis.getPose().theta); // heading
             // log position telemetry
             lemlib::telemetrySink()->info("Chassis pose: {}", chassis.getPose());
+            
+            if(selector.get_value() == 1){
+                increment();
+            }
+        
+            if (i==1){
+                Auton = SKILLS;
+                pros::lcd::print(4, "Auton: %f", Auton);
+            }
+            else if (i==2){
+                Auton = PID;
+                pros::lcd::print(4, "Auton: %f", Auton);
+            }
+            else if (i==3) {
+                pros::lcd::print(4, "TESTING: %f", Auton);
+            }
 
             // delay to save resources
             pros::delay(50);
@@ -195,95 +374,14 @@ ASSET(example_txt); // '.' replaced with "_" to make c++ happy
 
 
 /**
- * Selects Autonomous Mode based on the Limit Switch Input
- */
-
-
-/**
  * Runs during auto
  *
  * This is an example autonomous routine which demonstrates a lot of the features LemLib has to offer
  */
 void autonomous() {
-    
-    //chassis.moveToPoint(24,24,5000);
+    skills();
 
-    // turn to face heading 90 with a very long timeout (PID TUNER)
-    //chassis.turnToHeading(90, 100000);
-    
-    
-    belt(100);
-    intake.move(-100);
-    pros::delay(500);
-    
-    // first mogo
-    chassis.moveToPoint(0,14,5000);
-    chassis.turnToPoint(-27,14,5000,{.forwards = false},true);
-    chassis.moveToPoint(-27,14,5000,{.forwards = false},true);
-    pros::delay(1000);
-    toggleClamp();
-    pros::delay(1000);
-
-    chassis.moveToPoint(-26,45,5000);
-    chassis.moveToPoint(-26,30,5000,{.forwards = false},true);
-    //chassis.turnToPoint(-53,60,5000);  
-    
-    // wall stake
-    chassis.moveToPoint(-53,60,1000);
-    chassis.turnToHeading(270,5000);
-    chassis.moveToPoint(-65,60,5000);
-    pros::delay(1000);
-    chassis.moveToPoint(-55,60,5000,{.forwards = false},true);
-    chassis.moveToPoint(-55,58,5000);
-    //chassis.moveToPoint(-48,48,5000);
-    chassis.turnToHeading(180,5000);
-    chassis.moveToPoint(-55,30,5000);
-    chassis.moveToPoint(-65,10,5000);
-    chassis.moveToPoint(-55,30,5000,{.forwards = false},true);
-    chassis.moveToPoint(-55,10,5000);
-    chassis.moveToPoint(-55,-10,100);
-    chassis.moveToPoint(-55,-23,100);
-    chassis.moveToPoint(-55,10,5000,{.forwards = false},true);
-    chassis.turnToHeading(270,5000);
-    //chassis.moveToPoint(-65,10,5000);
-
-    chassis.moveToPoint(-65,20,5000);
-    chassis.moveToPoint(-67.5,-15,1000,{.forwards = false}, true);
-    pros::delay(500);
-    toggleClamp();
-    intake.move(100);
-    pros::delay(500);
-    intake.move(-100);
-    //chassis.moveToPoint(-24,24,5000);
-    chassis.moveToPoint(-40,70,5000);
-    chassis.moveToPoint(-40,80,5000);
-    chassis.moveToPoint(-25,90,5000);
-    chassis.turnToHeading(180,5000);
-    chassis.moveToPoint(-25,110,5000,{.forwards = false}, true);
-    pros::delay(500);
-    toggleClamp();
-    pros::delay(1000);
-    chassis.moveToPoint(-70,115,1000,{.forwards = false}, true);
-    belt(0);
-    chassis.moveToPoint(-55,100,5000);
-    pros::delay(500);
-    belt(100);
-    pros::delay(250);
-    belt(0);
-    chassis.moveToPoint(0,120,5000,{.forwards = false}, true);
-    chassis.turnToHeading(180,5000);
-    chassis.moveToPoint(0,125,5000,{.forwards = false}, true);
-    belt(100);
-    pros::delay(1000);
-    chassis.moveToPoint(0,120,5000);
-    chassis.turnToHeading(0,5000);
-    chassis.moveToPoint(0,110,5000,{.forwards = false}, true);
-    toggleClamp();
-    chassis.moveToPoint(-27,90,5000);
-
-
-
-    
+    //pid_tune(-sideA);
 
     // wait until the movement is done
     chassis.waitUntilDone();
@@ -301,6 +399,7 @@ void autonomous() {
                                                                 
                                             
  */
+ //i like the base because it moves -Jackson Best
 void opcontrol() {
     // controller
     // loop to continuously update motors
@@ -311,6 +410,8 @@ void opcontrol() {
 
         // move the chassis with curvature drive
         chassis.tank(leftY, rightY);
+
+        pros::lcd::print(6, "Proximity value: %f", detector.get_proximity());
 
         if (controller.get_digital_new_press(pros::E_CONTROLLER_DIGITAL_Y)) {
             toggleClamp();
@@ -324,13 +425,25 @@ void opcontrol() {
             toggleRight();
         }
 
+        if(controller.get_digital_new_press(pros::E_CONTROLLER_DIGITAL_RIGHT)) {
+            toggleSilly();
+        }
+
         if (controller.get_digital(pros::E_CONTROLLER_DIGITAL_R2)) {
             intake.move(-100);
-            belt(78);
+            belt(100);
+        }
+        else if(controller.get_digital(pros::E_CONTROLLER_DIGITAL_L2) and not (detector.get_hue()<20)){
+            intake.move(-100);
+            belt(55);
         }
         else if (controller.get_digital(pros::E_CONTROLLER_DIGITAL_UP)) {
             intake.move(100);
-            belt(-48);
+            belt(-100);
+        }
+        else if (controller.get_digital(pros::E_CONTROLLER_DIGITAL_L2) and (detector.get_hue()<20)) {
+            intake.move(100);
+            belt(-55);
         }
         else{
             intake.set_brake_mode(pros::E_MOTOR_BRAKE_COAST);
@@ -338,9 +451,19 @@ void opcontrol() {
             belt(0);
         }
 
-        if (sorter.get_proximity()) {
-            pros::lcd::print(6, "Hue value: %ld \n", sorter.get_hue());
+        /*if (detector.get_hue()<10) {
+            pros::lcd::print(5, "Red:");
+            pros::lcd::print(6, "Hue value: %f", detector.get_hue());
         }
+        else if (detector.get_hue()>215 && detector.get_hue()<230){
+            pros::lcd::print(5, "Blue:");
+            pros::lcd::print(6, "Hue value: %f", detector.get_hue());
+        }
+        else {
+            pros::lcd::print(5, " ");
+            pros::lcd::print(6, "Hue value: %f", detector.get_hue());
+        }*/
+        
 
         // delay to save resources
         pros::delay(10);
